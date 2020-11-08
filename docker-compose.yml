@@ -1,0 +1,45 @@
+# v3 syntax
+version: "3"
+# Named volumes
+volumes:
+  # Redis Data
+  delivery-redis-data:
+    driver: local
+
+services:
+  # PHP (nginx)
+  api:
+    image: ambientum/php:7.2-nginx
+    container_name: delivery-nginx
+    volumes:
+      - .:/var/www/app
+    ports:
+      - "8006:8080"
+    environment:
+      - XDEBUG_ENABLED=true
+    depends_on:
+      - redis
+    links:
+      - redis
+      - mysql
+
+  # Mysql (5.7)
+  mysql:
+    image: ambientum/mysql:5.7
+    container_name: delivery-mysql
+    ports:
+      - "3309:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=delivery
+      - MYSQL_USER=delivery
+      - MYSQL_PASSWORD=delivery@mysql
+  # Redis
+  redis:
+    image: redis:4.0
+    container_name: delivery-redis
+    command: redis-server --requirepass delivery@redis --appendonly yes
+    volumes:
+      - delivery-redis-data:/data
+    ports:
+      - "6382:6379"
